@@ -62,6 +62,26 @@ python3 -m http.server              # from the project root
 
 Now open http://localhost:8000/maps/ in a browser.
 
+## Paper
+
+This repository accompanies the following paper:
+
+> Bischof, M., Huser, D., Ochsner, A., Petrlic, R., Portmann, E.: Email provider dependencies and email security in municipalities across Germany, Austria, and Switzerland. In: Computer Security. ESORICS 2026 International Workshops (SecAssure 2026). Lecture Notes in Computer Science, Springer Nature Switzerland (2026), to appear
+
+**[PDF (accepted manuscript)](https://papers.mxmap-project.org/secassure2026.pdf)** — the Version of Record will be available from Springer once published. The manuscript is not covered by this repository's MIT license; its use is subject to Springer Nature's [Accepted Manuscript terms of use](https://www.springernature.com/gp/open-research/policies/accepted-manuscript-terms).
+
+```bibtex
+@inproceedings{bischof2026email,
+  author    = {Bischof, Mario and Huser, David and Ochsner, Alexej and Petrlic, Ronald and Portmann, Edy},
+  title     = {Email Provider Dependencies and Email Security in Municipalities Across {Germany}, {Austria}, and {Switzerland}},
+  booktitle = {Computer Security. ESORICS 2026 International Workshops (SecAssure 2026)},
+  series    = {Lecture Notes in Computer Science},
+  publisher = {Springer Nature Switzerland},
+  year      = {2026},
+  note      = {to appear}
+}
+```
+
 ## Origins
 
 This project builds on [MXmap](https://mxmap.ch) ([source](https://github.com/davidhuser/mxmap)), a solo project by David Huser mapping the email providers of ~2,100 Swiss municipalities, which spawned around ten country-specific forks across Europe. SecAssure2026 extends that work to all of Germany, Austria and Switzerland and adds a dedicated email-security scanning stage.
