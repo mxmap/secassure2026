@@ -92,26 +92,53 @@ async def probe_spf(domain: str) -> list[Evidence]:
 
 
 async def probe_dkim(domain: str) -> list[Evidence]:
-    """Query DKIM selector CNAMEs and match targets."""
+    """Query DKIM selectors: match CNAME targets, with a TXT fallback for Google.
+
+    Microsoft-style tenants expose DKIM as a CNAME (selector1/selector2 →
+    ``*.onmicrosoft.com``). Google Workspace instead publishes the DKIM key
+    directly as a **TXT** record at ``google._domainkey`` (``v=DKIM1; k=rsa;
+    p=...``), not a CNAME — so a CNAME-only probe can never fire for standard
+    Google tenants. When the CNAME query for a Google selector yields nothing,
+    fall back to a TXT query: the selector names ("google", "google2048") are
+    Google-distinctive, so a v=DKIM1 key there is provider evidence on its own.
+    """
     results: list[Evidence] = []
     for sig in SIGNATURES:
         for selector in sig.dkim_selectors:
             qname = f"{selector}._domainkey.{domain}"
             answer = await resolve_robust(qname, "CNAME")
-            if answer is None:
+            if answer is not None:
+                for rdata in answer:
+                    target = str(rdata.target).rstrip(".").lower()
+                    if match_patterns(target, sig.dkim_cname_patterns):
+                        results.append(
+                            Evidence(
+                                kind=SignalKind.DKIM,
+                                provider=sig.provider,
+                                weight=WEIGHTS[SignalKind.DKIM],
+                                detail=f"DKIM {qname} CNAME → {target}",
+                                raw=target,
+                            )
+                        )
                 continue
-            for rdata in answer:
-                target = str(rdata.target).rstrip(".").lower()
-                if match_patterns(target, sig.dkim_cname_patterns):
+            if sig.provider is not Provider.GOOGLE:
+                continue
+            txt_answer = await resolve_robust(qname, "TXT")
+            if txt_answer is None:
+                continue
+            for rdata in txt_answer:
+                txt = b"".join(rdata.strings).decode("utf-8", errors="ignore")
+                if "v=dkim1" in txt.lower():
                     results.append(
                         Evidence(
                             kind=SignalKind.DKIM,
                             provider=sig.provider,
                             weight=WEIGHTS[SignalKind.DKIM],
-                            detail=f"DKIM {qname} CNAME → {target}",
-                            raw=target,
+                            detail=f"DKIM {qname} TXT key present (v=DKIM1)",
+                            raw=txt[:120],
                         )
                     )
+                    break
     return results
 
 

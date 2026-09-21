@@ -213,6 +213,52 @@ class TestProbeDkim:
             results = await probe_dkim("example.com")
         assert any(e.provider == Provider.GOOGLE for e in results)
 
+    async def test_google_txt_fallback_hit(self):
+        """Google Workspace publishes DKIM as a TXT key (v=DKIM1), not a CNAME."""
+
+        async def _resolve(qname, rdtype):
+            if "google._domainkey" in qname and rdtype == "TXT":
+                return [_txt_rdata("v=DKIM1; k=rsa; p=MIIBIjANBgkqhkiG9w0BAQEFA")]
+            return None
+
+        with patch(
+            "mail_municipalities.provider_classification.probes.resolve_robust",
+            side_effect=_resolve,
+        ):
+            results = await probe_dkim("example.com")
+        assert any(
+            e.provider == Provider.GOOGLE and e.kind == SignalKind.DKIM
+            for e in results
+        )
+
+    async def test_google_txt_fallback_ignores_non_dkim_txt(self):
+        async def _resolve(qname, rdtype):
+            if rdtype == "TXT":
+                return [_txt_rdata("some unrelated verification token")]
+            return None
+
+        with patch(
+            "mail_municipalities.provider_classification.probes.resolve_robust",
+            side_effect=_resolve,
+        ):
+            results = await probe_dkim("example.com")
+        assert results == []
+
+    async def test_txt_fallback_only_for_google_selectors(self):
+        """A stray v=DKIM1 TXT at a Microsoft-style CNAME selector must not classify."""
+
+        async def _resolve(qname, rdtype):
+            if qname.startswith("selector1.") and rdtype == "TXT":
+                return [_txt_rdata("v=DKIM1; k=rsa; p=abc")]
+            return None
+
+        with patch(
+            "mail_municipalities.provider_classification.probes.resolve_robust",
+            side_effect=_resolve,
+        ):
+            results = await probe_dkim("example.com")
+        assert results == []
+
     async def test_no_match(self):
         with patch(
             "mail_municipalities.provider_classification.probes.resolve_robust",
