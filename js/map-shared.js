@@ -1,6 +1,52 @@
 /* map-shared.js — shared utilities for map pages */
 
-var CARTO_KEY = '__CARTO_KEY__'; // injected from the CARTO_KEY GitHub secret at deploy time
+/* Basemap: open & keyless providers only — no API keys, no accounts, no
+ * deploy-time secret injection. Rationale: on a static site a "secret"
+ * basemap key ends up world-readable in the served JS anyway (anyone can
+ * copy it and burn the quota), forks and local checkouts render broken
+ * tiles, and the deploy gains a billing dependency. CARTO put its raster
+ * basemaps behind API keys (watermark rollout 2026-08-28, enforcement
+ * 2026-09-23), so the keyless CARTO URLs this file used are dead.
+ *
+ * Primary: OpenStreetMap standard raster (OSMF community infrastructure,
+ * native up to z19). The familiar light-gray "positron" look is recreated
+ * with a CSS grayscale filter (.basemap-muted, css/map.css); the labels
+ * that OSM bakes into the raster are lifted ABOVE the data polygons by
+ * re-drawing the same tiles on a dedicated pane blended with
+ * mix-blend-mode: darken (same URLs -> served from the browser HTTP
+ * cache, zero extra tile requests; see css/map.css).
+ *
+ * Fallback (runtime failover): Esri World Light Gray, also keyless. Two
+ * Esri traps encoded here: the axis order is /tile/{z}/{y}/{x} — INVERTED
+ * vs slippy — and native tiles stop at z16 (maxNativeZoom upscales
+ * beyond). A wrong axis order renders the wrong place on Earth with zero
+ * errors, so tests/test_basemap.py pins the rule per host.
+ */
+var BASEMAP = {
+  base: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+  exportAttribution: '© OpenStreetMap contributors',
+  maxZoom: 19,
+  fallbackBase: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}',
+  fallbackLabels: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}',
+  fallbackAttribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &middot; Tiles &copy; <a href="https://www.esri.com/">Esri</a>',
+  fallbackExportAttribution: '© OpenStreetMap · Tiles © Esri',
+  fallbackMaxNativeZoom: 16,
+  failoverThreshold: 8
+};
+
+/* Active basemap state — the PNG export reads this too, so a failover
+ * changes both the on-screen map and exported images coherently. */
+var activeBasemap = {
+  base: BASEMAP.base,
+  labels: BASEMAP.base,          // OSM: labels are the same tiles, blended
+  exportAttribution: BASEMAP.exportAttribution,
+  exportMaxZoom: 18
+};
+
+function tileUrlFromTemplate(template, z, x, y) {
+  return template.replace('{z}', z).replace('{x}', x).replace('{y}', y);
+}
 
 function escapeHtml(str) {
   var el = document.createElement('span');
@@ -21,19 +67,67 @@ function initMap(elementId, options) {
     renderer: L.canvas()
   });
 
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png?key=' + CARTO_KEY, {
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>',
-    subdomains: 'abcd',
+  // Dedicated pane for the label overlay: above the data polygons in the
+  // overlayPane (z 400), below markers (z 600). CSS in css/map.css gives it
+  // mix-blend-mode: darken + a midtone-crushing filter so only the dark
+  // pixels (place names, admin borders) emerge above the colored polygons,
+  // and hides it entirely where blending is unsupported (@supports guard).
+  map.createPane('basemap-labels');
+  map.getPane('basemap-labels').style.zIndex = 450;
+  map.getPane('basemap-labels').style.pointerEvents = 'none';
+
+  var baseLayer = L.tileLayer(activeBasemap.base, {
+    attribution: BASEMAP.attribution,
     maxZoom: 19,
+    className: 'basemap-muted',
     crossOrigin: ''
   }).addTo(map);
 
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png?key=' + CARTO_KEY, {
-    subdomains: 'abcd',
+  var labelLayer = L.tileLayer(activeBasemap.labels, {
     maxZoom: 19,
-    pane: 'shadowPane',
+    pane: 'basemap-labels',
     crossOrigin: ''
   }).addTo(map);
+
+  // Runtime failover: OSMF is community infrastructure without an SLA. If
+  // the base layer accumulates tileerror events (outage, throttling), swap
+  // both layers to the keyless Esri reserve. The reserve is exercised daily
+  // by tests/test_basemap.py so it cannot rot unnoticed.
+  var osmTileErrors = 0;
+  var failoverDone = false;
+  function activateBasemapFailover(reason) {
+    if (failoverDone) return;
+    failoverDone = true;
+    console.warn('[basemap] primary basemap failing (' + reason + '): switching to Esri World Light Gray reserve');
+    map.removeLayer(baseLayer);
+    map.removeLayer(labelLayer);
+    activeBasemap.base = BASEMAP.fallbackBase;
+    activeBasemap.labels = BASEMAP.fallbackLabels;
+    activeBasemap.exportAttribution = BASEMAP.fallbackExportAttribution;
+    activeBasemap.exportMaxZoom = BASEMAP.fallbackMaxNativeZoom;
+    baseLayer = L.tileLayer(BASEMAP.fallbackBase, {
+      attribution: BASEMAP.fallbackAttribution,
+      maxNativeZoom: BASEMAP.fallbackMaxNativeZoom,
+      maxZoom: 19,
+      className: 'basemap-muted',
+      crossOrigin: ''
+    }).addTo(map);
+    // Esri Reference is a transparent label-only layer: on the blend pane
+    // the darken blend keeps the labels above the polygons, like OSM.
+    labelLayer = L.tileLayer(BASEMAP.fallbackLabels, {
+      maxNativeZoom: BASEMAP.fallbackMaxNativeZoom,
+      maxZoom: 19,
+      pane: 'basemap-labels',
+      crossOrigin: ''
+    }).addTo(map);
+  }
+  baseLayer.on('tileerror', function () {
+    osmTileErrors += 1;
+    if (osmTileErrors >= BASEMAP.failoverThreshold) {
+      activateBasemapFailover(osmTileErrors + ' tileerror');
+    }
+  });
+  window.__forceBasemapFailover = function () { activateBasemapFailover('manual'); };
 
   var resizeTimer;
   window.addEventListener('resize', function () {
@@ -167,19 +261,27 @@ function handleLoadError(err) {
   }
 }
 
-function fetchTileLayer(ctx, layer, zoom, minTX, maxTX, minTY, maxTY, tileSize, originX, originY) {
+function fetchTileLayer(ctx, template, zoom, minTX, maxTX, minTY, maxTY, tileSize, originX, originY, opts) {
+  opts = opts || {};
   var promises = [];
   for (var tx = minTX; tx <= maxTX; tx++) {
     for (var ty = minTY; ty <= maxTY; ty++) {
       (function (tx, ty) {
-        var sub = 'abcd'.charAt(Math.abs(tx + ty) % 4);
-        var url = 'https://' + sub + '.basemaps.cartocdn.com/' + layer + '/' + zoom + '/' + tx + '/' + ty + '.png?key=' + CARTO_KEY;
+        var url = tileUrlFromTemplate(template, zoom, tx, ty);
         promises.push(
           fetch(url, { mode: 'cors' })
             .then(function (r) { return r.blob(); })
             .then(function (b) { return createImageBitmap(b); })
             .then(function (bmp) {
+              // Replicate the on-screen look: the base pass is muted like
+              // .basemap-muted; the label pass uses the same darken blend
+              // as the .leaflet-basemap-labels-pane CSS, so exports match
+              // the map (labels above polygons, gray canvas below).
+              ctx.save();
+              if (opts.composite) ctx.globalCompositeOperation = opts.composite;
+              if (opts.filter && 'filter' in ctx) ctx.filter = opts.filter;
               ctx.drawImage(bmp, tx * tileSize - originX, ty * tileSize - originY, tileSize, tileSize);
+              ctx.restore();
               bmp.close();
             })
             .catch(function () {})
@@ -301,9 +403,11 @@ function renderLegendToCanvas(legendEl, scale) {
 function exportMapImage(map, filename, onDone) {
   map.closePopup();
 
-  // Render at current zoom + 2 for 4× tile detail in each dimension
+  // Render at current zoom + 2 for 4× tile detail in each dimension.
+  // Cap at the active basemap's export ceiling (18 for OSM; the Esri
+  // reserve has no native tiles beyond 16).
   var viewZoom = map.getZoom();
-  var exportZoom = Math.min(Math.round(viewZoom) + 2, 18);
+  var exportZoom = Math.min(Math.round(viewZoom) + 2, activeBasemap.exportMaxZoom);
   var bounds = map.getBounds();
 
   // Project bounds to pixel coordinates at export zoom
@@ -316,7 +420,7 @@ function exportMapImage(map, filename, onDone) {
 
   // Cap at 8192 — fall back to zoom+1 if too large
   if (w > 8192 || h > 8192) {
-    exportZoom = Math.min(Math.round(viewZoom) + 1, 18);
+    exportZoom = Math.min(Math.round(viewZoom) + 1, activeBasemap.exportMaxZoom);
     nw = map.project(bounds.getNorthWest(), exportZoom);
     se = map.project(bounds.getSouthEast(), exportZoom);
     originX = Math.floor(nw.x);
@@ -346,10 +450,12 @@ function exportMapImage(map, filename, onDone) {
   var legendPromise = renderLegendToCanvas(legendEl, legendScale);
 
   // 1. Base tiles → 2. GeoJSON features → 3. Label tiles → 4. Legend + attribution
-  fetchTileLayer(ctx, 'light_nolabels', exportZoom, minTX, maxTX, minTY, maxTY, tileSize, originX, originY)
+  fetchTileLayer(ctx, activeBasemap.base, exportZoom, minTX, maxTX, minTY, maxTY, tileSize, originX, originY,
+                 { filter: 'saturate(0) brightness(1.06) contrast(0.9)' })
     .then(function () {
       drawMapFeatures(map, ctx, exportZoom, originX, originY);
-      return fetchTileLayer(ctx, 'light_only_labels', exportZoom, minTX, maxTX, minTY, maxTY, tileSize, originX, originY);
+      return fetchTileLayer(ctx, activeBasemap.labels, exportZoom, minTX, maxTX, minTY, maxTY, tileSize, originX, originY,
+                            { filter: 'saturate(0) brightness(1.35) contrast(1.6)', composite: 'darken' });
     })
     .then(function () { return legendPromise; })
     .then(function (legendImg) {
@@ -360,7 +466,7 @@ function exportMapImage(map, filename, onDone) {
       // Attribution
       var fontSize = Math.max(13, Math.round(w / 300));
       ctx.font = fontSize + 'px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
-      var attrText = '\u00a9 OpenStreetMap \u00a9 CARTO';
+      var attrText = activeBasemap.exportAttribution;
       var tw = ctx.measureText(attrText).width;
       ctx.fillStyle = 'rgba(255,255,255,0.8)';
       ctx.fillRect(0, h - fontSize * 2.2, tw + fontSize * 2, fontSize * 2.2);

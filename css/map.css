@@ -157,3 +157,24 @@ body { display: flex; flex-direction: column; height: 100dvh; overflow: hidden; 
   .signal-text { max-width: 140px; }
   .signal-item { gap: 4px; padding-left: 4px; }
 }
+
+/* ── Keyless basemap (OSM primary, Esri reserve) ─────────────────────────────
+   .basemap-muted recreates the light-gray "positron" canvas from the raw
+   OSM tiles (Leaflet puts a tileLayer's className on the LAYER CONTAINER,
+   not on the tile <img>s — target both for robustness).
+   .leaflet-basemap-labels-pane re-draws the SAME tiles above the data
+   polygons and keeps only their dark pixels (place names, admin borders)
+   via mix-blend-mode: darken + a midtone-crushing filter. Hidden entirely
+   where blending is unsupported, so it can never cover the data. */
+.leaflet-layer.basemap-muted,
+.leaflet-tile.basemap-muted {
+  filter: saturate(0) brightness(1.06) contrast(0.9);
+}
+.leaflet-basemap-labels-pane { display: none; pointer-events: none; }
+@supports (mix-blend-mode: darken) {
+  .leaflet-basemap-labels-pane {
+    display: block;
+    mix-blend-mode: darken;
+    filter: saturate(0) brightness(1.35) contrast(1.6);
+  }
+}

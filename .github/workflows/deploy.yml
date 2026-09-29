@@ -21,13 +21,9 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v6
-      - name: Inject CARTO basemap key
-        env:
-          CARTO_KEY: ${{ secrets.CARTO_KEY }}
-        run: |
-          test -n "$CARTO_KEY" || { echo "CARTO_KEY secret is not set"; exit 1; }
-          sed -i "s|__CARTO_KEY__|$CARTO_KEY|" js/map-shared.js
-          grep -q "$CARTO_KEY" js/map-shared.js
+      # No basemap key injection anymore: the basemap is keyless (OSM primary
+      # + Esri reserve, see js/map-shared.js). Forks and local checkouts render
+      # exactly what production renders, and no CARTO_KEY secret is needed.
       - uses: actions/upload-pages-artifact@v4
         with:
           path: .
