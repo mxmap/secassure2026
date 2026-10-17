@@ -14,42 +14,241 @@ body { background: #f0f1f5; min-height: 100vh; }
 .landing { max-width: 720px; margin: 0 auto; padding: 40px 20px; }
 .landing h2 { font-size: 22px; font-weight: 700; color: #1a1a2e; margin-bottom: 8px; }
 .landing p { font-size: 14px; color: #555; line-height: 1.6; margin-bottom: 24px; }
-.map-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
-.map-card {
-  display: block; background: #fff; border-radius: 8px; padding: 24px;
-  text-decoration: none; color: #1a1a2e; border: 1px solid #d8dae0;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.06); transition: box-shadow 0.15s;
+.landing p a, .link-list a { color: #2563eb; text-decoration: none; }
+.landing p a:hover, .link-list a:hover { text-decoration: underline; }
+.landing .intro { font-size: 15px; max-width: 640px; }
+#header .header-icon-link {
+  display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500;
+  color: #ccc; text-decoration: none; padding: 5px 8px; border-radius: 4px;
 }
-.map-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.12); }
+#header .header-icon-link:hover { color: #fff; background: rgba(255,255,255,0.12); }
+#header .nav-primary { margin-left: 8px; }
+@media (max-width: 600px) {
+  #header .header-icon-link .label { display: none; }
+}
+.landing section { margin-top: 40px; }
+.landing section h2 { font-size: 18px; margin-bottom: 12px; }
+.card {
+  background: #fff; border-radius: 8px; border: 1px solid #d8dae0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+.map-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+.map-card { display: flex; flex-direction: column; padding: 24px; color: #1a1a2e; }
 .map-card h3 { font-size: 17px; font-weight: 600; margin-bottom: 8px; }
-.map-card p { font-size: 13px; color: #555; line-height: 1.5; margin: 0; }
-.landing-footer { margin-top: 32px; font-size: 12px; color: #999; }
-.landing-footer a { color: #2563eb; text-decoration: none; }
-.landing-footer a:hover { text-decoration: underline; }
+.map-card p { font-size: 13px; color: #555; line-height: 1.5; margin: 0 0 18px; flex: 1; }
+.map-card .btn { align-self: flex-start; }
+
+.btn {
+  display: inline-flex; align-items: center; gap: 7px; background: #2563eb; color: #fff;
+  font-size: 13px; font-weight: 600; padding: 8px 16px; border-radius: 6px; text-decoration: none;
+  transition: background 0.15s;
+}
+.btn:hover { background: #1d4ed8; }
+.icon { width: 15px; height: 15px; flex-shrink: 0; fill: currentColor; }
+
+.paper { padding: 20px 24px; }
+.paper-title { font-size: 16px; font-weight: 600; color: #1a1a2e; line-height: 1.45; margin-bottom: 6px; }
+.landing .paper p { margin: 0; }
+.landing .paper .paper-venue { font-size: 13px; color: #888; }
+.paper-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; margin-top: 16px; }
+.paper summary { font-size: 13px; color: #555; cursor: pointer; }
+.paper details[open] { flex-basis: 100%; }
+.paper pre {
+  margin-top: 10px; padding: 12px; background: #f5f6f9; border: 1px solid #e3e5ea; border-radius: 6px;
+  font-size: 12px; line-height: 1.5; overflow-x: auto; color: #333;
+}
+.landing .paper .paper-note { font-size: 12px; color: #999; margin-top: 14px; }
+
+.link-list { margin: 0; padding-left: 20px; font-size: 14px; color: #555; line-height: 1.6; }
+.link-list li { margin-bottom: 6px; }
+.link-list li::marker { color: #aaa; }
+
+.coverage h3 { font-size: 13px; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: 0.05em; margin: 20px 0 8px; }
+.coverage-list { list-style: none; margin: 0; padding: 0; }
+.coverage-list li { border-top: 1px solid #eceef2; }
+.coverage-list li:first-child { border-top: none; }
+.coverage-list a { display: block; padding: 12px 16px; text-decoration: none; color: #1a1a2e; }
+.coverage-list a:hover { background: #f7f8fb; }
+.coverage-list li:first-child a { border-radius: 8px 8px 0 0; }
+.coverage-list li:last-child a { border-radius: 0 0 8px 8px; }
+.coverage-title { display: block; font-size: 14px; font-weight: 500; line-height: 1.4; }
+.coverage-list a:hover .coverage-title { color: #2563eb; }
+.coverage-meta { display: block; font-size: 12px; color: #888; margin-top: 3px; }
+.coverage-lang {
+  display: inline-block; font-size: 10px; font-weight: 600; color: #555; background: #eceef2;
+  border-radius: 3px; padding: 1px 5px; margin-left: 6px; vertical-align: 1px;
+}
+.landing .coverage-note { font-size: 13px; margin: 0 0 8px; }
+.landing .coverage-checked { font-size: 12px; color: #999; margin: 12px 0 0; }
 </style>
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-github" viewBox="0 0 16 16"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></symbol>
+  <symbol id="i-paper" viewBox="0 0 16 16"><path d="M4 0h5.5L14 4.5V14a2 2 0 01-2 2H4a2 2 0 01-2-2V2a2 2 0 012-2zm5 1.5V5h3.5L9 1.5zM5 8.25a.75.75 0 000 1.5h6a.75.75 0 000-1.5H5zm0 3a.75.75 0 000 1.5h4a.75.75 0 000-1.5H5z"/></symbol>
+</svg>
 <header id="header">
   <div class="header-left">
-    <h1 class="brand">Municipality Emails</h1>
+    <h1 class="brand"><a href="index.html">Municipality Emails</a></h1>
+    <nav class="nav-primary" aria-label="Maps">
+      <a class="header-link" href="providers.html">Providers</a>
+      <a class="header-link" href="security.html">Security</a>
+    </nav>
+  </div>
+  <div class="header-right">
+    <a class="header-icon-link" href="https://papers.mxmap-project.org/secassure2026.pdf" target="_blank" rel="noopener" title="Paper (PDF)"><svg class="icon"><use href="#i-paper"/></svg><span class="label">Paper</span></a>
+    <a class="header-icon-link" href="https://github.com/mxmap/secassure2026" target="_blank" rel="noopener" title="Source code and data on GitHub"><svg class="icon"><use href="#i-github"/></svg><span class="label">GitHub</span></a>
   </div>
 </header>
 <div class="landing">
   <h2>Municipality Email Maps</h2>
-  <p>Interactive maps showing email infrastructure of ~15,300 municipalities in Germany, Austria, and Switzerland, based on public DNS records and network signals.</p>
+  <p class="intro">Who runs the official email of your municipality, and how well is it protected against fake senders? Interactive maps of ~15,300 municipalities in Germany, Austria, and Switzerland, based on public DNS records and network signals. They accompany our peer-reviewed <a href="https://papers.mxmap-project.org/secassure2026.pdf" target="_blank" rel="noopener">SecAssure 2026 paper</a>.</p>
   <div class="map-list">
-    <a href="providers.html" class="map-card">
+    <div class="card map-card">
       <h3>📨 Email Providers</h3>
       <p>Which provider handles each municipality's official email? Classified by jurisdiction: US cloud (Microsoft, Google, AWS), domestic, or foreign.</p>
-    </a>
-    <a href="security.html" class="map-card">
+      <a class="btn" href="providers.html">Open map →</a>
+    </div>
+    <div class="card map-card">
       <h3>🛡️ Email Security</h3>
       <p>How well are municipality email domains protected against spoofing? Based on SPF and DMARC configuration.</p>
-    </a>
+      <a class="btn" href="security.html">Open map →</a>
+    </div>
   </div>
-  <div class="landing-footer">
-    <p>Companion site to our SecAssure 2026 paper (<a href="https://papers.mxmap-project.org/secassure2026.pdf" target="_blank">PDF, accepted manuscript</a>). Successor to <a href="https://mxmap.ch" target="_blank">mxmap.ch</a>. Open source &amp; open data on <a href="https://github.com/mxmap/secassure2026" target="_blank">GitHub</a>.</p>
-  </div>
+  <section>
+    <h2>Paper</h2>
+    <div class="card paper">
+      <div class="paper-title">Email Provider Dependencies and Email Security in Municipalities Across Germany, Austria, and Switzerland</div>
+      <p>Mario Bischof, David Huser, Alexej Ochsner, Ronald Petrlic, Edy Portmann</p>
+      <p class="paper-venue">Computer Security. ESORICS 2026 International Workshops (SecAssure 2026), LNCS, Springer, to appear</p>
+      <div class="paper-actions">
+        <a class="btn" href="https://papers.mxmap-project.org/secassure2026.pdf" target="_blank" rel="noopener"><svg class="icon"><use href="#i-paper"/></svg>Read the paper (PDF)</a>
+        <details>
+          <summary>Cite (BibTeX)</summary>
+<pre>@inproceedings{bischof2026email,
+  author    = {Bischof, Mario and Huser, David and Ochsner, Alexej and Petrlic, Ronald and Portmann, Edy},
+  title     = {Email Provider Dependencies and Email Security in Municipalities Across {Germany}, {Austria}, and {Switzerland}},
+  booktitle = {Computer Security. ESORICS 2026 International Workshops (SecAssure 2026)},
+  series    = {Lecture Notes in Computer Science},
+  publisher = {Springer Nature Switzerland},
+  year      = {2026},
+  note      = {to appear}
+}</pre>
+        </details>
+      </div>
+      <p class="paper-note">Accepted manuscript. The Version of Record will be available from Springer once published; use is subject to Springer Nature's <a href="https://www.springernature.com/gp/open-research/policies/accepted-manuscript-terms" target="_blank" rel="noopener">Accepted Manuscript terms</a>.</p>
+    </div>
+  </section>
+  <section>
+    <h2>Links</h2>
+    <ul class="link-list">
+      <li><a href="https://papers.mxmap-project.org/secassure2026.pdf" target="_blank" rel="noopener">Paper (PDF)</a> – accepted manuscript of the SecAssure 2026 paper</li>
+      <li><a href="https://github.com/mxmap/secassure2026" target="_blank" rel="noopener">Source code &amp; data on GitHub</a> – MIT-licensed pipeline and open data</li>
+      <li><a href="https://mxmap.ch" target="_blank" rel="noopener">mxmap.ch</a> – the predecessor project, covering Swiss municipalities</li>
+    </ul>
+  </section>
+  <section class="coverage">
+    <h2>In the Media</h2>
+    <h3>Press</h3>
+    <ul class="card coverage-list">
+      <li><a href="https://www.solothurnerzeitung.ch/solothurn/kanton-solothurn/gefaelschte-gemeinde-mails-so-schneiden-solothurner-gemeinden-ab-ld.4246863" target="_blank" rel="noopener">
+        <span class="coverage-title">Gefälschte Gemeinde-Mails: So schneiden Solothurner Gemeinden ab</span>
+        <span class="coverage-meta">Solothurner Zeitung · 14 Oct 2026<span class="coverage-lang">DE</span></span>
+      </a></li>
+      <li><a href="https://www.behoerden-spiegel.de/2026/10/12/souveraen-aber-lueckenhaft/" target="_blank" rel="noopener">
+        <span class="coverage-title">Souverän, aber lückenhaft</span>
+        <span class="coverage-meta">Behörden Spiegel · 12 Oct 2026<span class="coverage-lang">DE</span></span>
+      </a></li>
+      <li><a href="https://www.ictjournal.ch/etudes/2026-10-07/plus-dune-commune-suisse-sur-deux-mise-sur-microsoft-pour-ses-e-mails" target="_blank" rel="noopener">
+        <span class="coverage-title">Plus d’une commune suisse sur deux mise sur Microsoft pour ses e-mails</span>
+        <span class="coverage-meta">ICTjournal · 7 Oct 2026<span class="coverage-lang">FR</span></span>
+      </a></li>
+      <li><a href="https://www.netzwoche.ch/news/2026-10-06/mehr-als-jede-zweite-schweizer-gemeinde-setzt-auf-microsoft" target="_blank" rel="noopener">
+        <span class="coverage-title">Mehr als jede zweite Schweizer Gemeinde setzt auf Microsoft</span>
+        <span class="coverage-meta">Netzwoche · 6 Oct 2026<span class="coverage-lang">DE</span></span>
+      </a></li>
+      <li><a href="https://www.swisscybersecurity.net/news/2026-10-06/bei-schweizer-gemeinden-hapert-es-am-schutz-vor-e-mail-spoofing" target="_blank" rel="noopener">
+        <span class="coverage-title">Bei Schweizer Gemeinden hapert es am Schutz vor E-Mail-Spoofing</span>
+        <span class="coverage-meta">SwissCybersecurity.net · 6 Oct 2026<span class="coverage-lang">DE</span></span>
+      </a></li>
+      <li><a href="https://www.watson.ch/fr/suisse/informatique/421994466-voici-a-quel-point-votre-commune-vous-expose-aux-arnaques" target="_blank" rel="noopener">
+        <span class="coverage-title">Voici à quel point votre commune vous expose aux arnaques</span>
+        <span class="coverage-meta">watson.ch · 6 Oct 2026<span class="coverage-lang">FR</span></span>
+      </a></li>
+      <li><a href="https://www.watson.ch/wissen/schweiz/555771480-so-gut-oder-schlecht-schuetzt-sich-deine-gemeinde-gegen-phishing-mails" target="_blank" rel="noopener">
+        <span class="coverage-title">So gut oder schlecht schützt sich deine Gemeinde gegen Phishing-Mails</span>
+        <span class="coverage-meta">watson.ch · 5 Oct 2026<span class="coverage-lang">DE</span></span>
+      </a></li>
+      <li><a href="https://www.inside-it.ch/schweizer-gemeinden-gut-geschuetzt-vor-e-mail-betrug-20261005" target="_blank" rel="noopener">
+        <span class="coverage-title">Schweizer Gemeinden gut geschützt vor E-Mail-Betrug</span>
+        <span class="coverage-meta">inside-it.ch · 5 Oct 2026<span class="coverage-lang">DE</span></span>
+      </a></li>
+      <li><a href="https://human-ist.unifr.ch/en/news/news/35305/wie-gut-schutzt-sich-ihre-gemeinde-vor-phishing/" target="_blank" rel="noopener">
+        <span class="coverage-title">Wie gut schützt sich Ihre Gemeinde vor Phishing?</span>
+        <span class="coverage-meta">Human-IST Institute, University of Fribourg · 5 Oct 2026<span class="coverage-lang">DE</span></span>
+      </a></li>
+      <li><a href="https://www.kommune21.de/k21-meldungen/deutschlands-kommunen-mailen-souveraen" target="_blank" rel="noopener">
+        <span class="coverage-title">Deutschlands Kommunen mailen souverän</span>
+        <span class="coverage-meta">Kommune21 · 30 Sep 2026<span class="coverage-lang">DE</span></span>
+      </a></li>
+      <li><a href="https://xpert.digital/en/europe-talks-about-independence/" target="_blank" rel="noopener">
+        <span class="coverage-title">Europe talks about independence? 15,000 municipalities analyzed: The invisible power of Microsoft in our administrations</span>
+        <span class="coverage-meta">Xpert.Digital · 20 Sep 2026<span class="coverage-lang">EN</span></span>
+      </a></li>
+      <li><a href="https://www.24heures.ch/phishing-votre-commune-vous-expose-peut-etre-aux-arnaques-644013064417" target="_blank" rel="noopener">
+        <span class="coverage-title">Phishing: votre commune vous expose peut-être aux arnaques</span>
+        <span class="coverage-meta">24 heures<span class="coverage-lang">FR</span></span>
+      </a></li>
+      <li><a href="https://background.tagesspiegel.de/smart-city-und-stadtentwicklung/briefing/bayern-ist-am-abhaengigsten" target="_blank" rel="noopener">
+        <span class="coverage-title">Bayern ist am abhängigsten</span>
+        <span class="coverage-meta">Tagesspiegel Background (paywalled)<span class="coverage-lang">DE</span></span>
+      </a></li>
+    </ul>
+    <h3>Academic</h3>
+    <ul class="card coverage-list">
+      <li><a href="https://tma.ifip.org/2026/wp-content/uploads/sites/15/2026/06/tma2026-final48.pdf" target="_blank" rel="noopener">
+        <span class="coverage-title">Municipalytics: Mapping the Digital Infrastructure of Municipalities Across GDPR Countries</span>
+        <span class="coverage-meta">Holzbauer, Gegenhuber, Ullrich · TMA 2026 · cites MXmap.ch<span class="coverage-lang">EN</span></span>
+      </a></li>
+    </ul>
+    <h3>Derived projects</h3>
+    <p class="coverage-note">Maps for other countries, derived from the predecessor <a href="https://mxmap.ch" target="_blank" rel="noopener">mxmap.ch</a>.</p>
+    <ul class="card coverage-list">
+      <li><a href="https://sovereignity.csh.ac.at/" target="_blank" rel="noopener">
+        <span class="coverage-title">MXmap: Email Providers of Austrian Municipalities</span>
+        <span class="coverage-meta">Austria · Complexity Science Hub</span>
+      </a></li>
+      <li><a href="https://livenson.github.io/mxmap/" target="_blank" rel="noopener">
+        <span class="coverage-title">MX Map: Email Sovereignty Map</span>
+        <span class="coverage-meta">Baltic states · livenson</span>
+      </a></li>
+      <li><a href="https://b42labs.github.io/mxmap/" target="_blank" rel="noopener">
+        <span class="coverage-title">MXmap: E-Mail-Provider deutscher Gemeinden</span>
+        <span class="coverage-meta">Germany · B42Labs</span>
+      </a></li>
+      <li><a href="https://complexity-science-hub.github.io/mxmap-hu/" target="_blank" rel="noopener">
+        <span class="coverage-title">MXmap: Email Providers of Hungarian Municipalities</span>
+        <span class="coverage-meta">Hungary · Complexity Science Hub</span>
+      </a></li>
+      <li><a href="https://mxmap.in/" target="_blank" rel="noopener">
+        <span class="coverage-title">MXmap: Email Providers of Indian Municipalities</span>
+        <span class="coverage-meta">India · mxmap.in</span>
+      </a></li>
+      <li><a href="https://mxmap.it/" target="_blank" rel="noopener">
+        <span class="coverage-title">Osservatorio Nazionale Sovranità Digitale: Posta elettronica della PA italiana</span>
+        <span class="coverage-meta">Italy · mxmap.it</span>
+      </a></li>
+      <li><a href="https://mxmap.nl/" target="_blank" rel="noopener">
+        <span class="coverage-title">MXmap: Email Providers of Dutch Municipalities</span>
+        <span class="coverage-meta">Netherlands · mxmap.nl</span>
+      </a></li>
+      <li><a href="https://mxmap.ro/" target="_blank" rel="noopener">
+        <span class="coverage-title">MXmap: Email Providers of Romanian Administrative Territorial Units</span>
+        <span class="coverage-meta">Romania · mxmap.ro</span>
+      </a></li>
+    </ul>
+    <p class="coverage-checked">Last checked: <time datetime="2026-10-17">17 October 2026</time></p>
+  </section>
 </div>
 </body>
 </html>
